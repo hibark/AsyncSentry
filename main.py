@@ -1,14 +1,15 @@
 import asyncio
-import aiohttp
+from core.crawler import Crawler
 
-async def check_target(url: str):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            print(f"Status: {response.status}")
-            print("Headers:")
-            for key, value in response.headers.items():
-                print(f"  {key}: {value}")
+async def main():
+    target = "http://localhost:8080"
+    crawler = Crawler(base_url=target, max_depth=2, concurrency=5)
+    endpoints = await crawler.run()
+
+    print(f"\n=== Résumé ===")
+    print(f"Total endpoints découverts : {len(endpoints)}")
+    for ep in endpoints:
+        print(f" - {ep.url}")
 
 if __name__ == "__main__":
-    asyncio.run(check_target("http://localhost:8080"))
-    
+    asyncio.run(main())
