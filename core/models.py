@@ -10,11 +10,23 @@ class Severity(Enum):
     INFO = "Info"
 
 @dataclass
+class FormField:
+    name: str
+    type: str = "text"
+    value: str = ""
+
+@dataclass
+class Form:
+    action: str
+    method: str = "GET"
+    fields: List[FormField] = field(default_factory=list)
+
+@dataclass
 class Endpoint:
     url: str
     method: str = "GET"
     params: List[str] = field(default_factory=list)
-    form_data: Dict[str, str] = field(default_factory=dict)
+    forms: List[Form] = field(default_factory=list)
 
 @dataclass
 class Vulnerability:
