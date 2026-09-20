@@ -2,6 +2,7 @@ import asyncio
 import aiohttp
 from core.crawler import Crawler
 from modules.passive.headers_audit import HeadersAuditor
+from modules.passive.cookies_audit import CookiesAuditor
 
 async def main():
     target = "http://localhost:8080"
@@ -13,15 +14,19 @@ async def main():
     print(f"\n=== Résumé du crawl ===")
     print(f"Total endpoints découverts : {len(endpoints)}")
 
-    # Phase 2 : Analyse passive (Security Headers)
-    print(f"\n=== Analyse passive : Security Headers ===")
+    # Phase 2 : Analyse passive
+    print(f"\n=== Analyse passive ===")
     all_vulnerabilities = []
 
     async with aiohttp.ClientSession() as session:
-        auditor = HeadersAuditor(session)
+        headers_auditor = HeadersAuditor(session)
+        cookies_auditor = CookiesAuditor(session)
+
         for endpoint in endpoints:
-            vulns = await auditor.audit(endpoint.url)
-            all_vulnerabilities.extend(vulns)
+            vulns_headers = await headers_auditor.audit(endpoint.url)
+            vulns_cookies = await cookies_auditor.audit(endpoint.url)
+            all_vulnerabilities.extend(vulns_headers)
+            all_vulnerabilities.extend(vulns_cookies)
 
     # Affichage des résultats
     if all_vulnerabilities:
