@@ -4,14 +4,16 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse, parse_qs
 from core.models import Endpoint, Form, FormField
 
+
 class Crawler:
-    def __init__(self, base_url: str, max_depth: int = 2, concurrency: int = 5):
+    def __init__(self, base_url: str, max_depth: int = 2, concurrency: int = 5, cookies: dict = None):
         self.base_url = base_url
         self.domain = urlparse(base_url).netloc
         self.max_depth = max_depth
         self.visited = set()
         self.endpoints = []
         self.semaphore = asyncio.Semaphore(concurrency)
+        self.cookies = cookies or {}
 
     def is_same_domain(self, url: str) -> bool:
         return urlparse(url).netloc == self.domain
@@ -52,7 +54,6 @@ class Crawler:
             method = form_tag.get("method", "GET").upper()
 
             fields = []
-            # Champs <input>
             for input_tag in form_tag.find_all("input"):
                 name = input_tag.get("name")
                 if name:
@@ -61,13 +62,12 @@ class Crawler:
                         type=input_tag.get("type", "text"),
                         value=input_tag.get("value", "")
                     ))
-            # Champs <textarea>
+
             for textarea in form_tag.find_all("textarea"):
                 name = textarea.get("name")
                 if name:
                     fields.append(FormField(name=name, type="textarea", value=textarea.text or ""))
 
-            # Champs <select>
             for select in form_tag.find_all("select"):
                 name = select.get("name")
                 if name:
@@ -107,6 +107,6 @@ class Crawler:
         await asyncio.gather(*tasks)
 
     async def run(self):
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(cookies=self.cookies) as session:
             await self.crawl(session, self.base_url, depth=0)
         return self.endpoints
