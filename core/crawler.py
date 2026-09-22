@@ -1,8 +1,8 @@
-import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse, parse_qs
 from core.models import Endpoint, Form, FormField
+from core.scheduler import CrawlScheduler
 
 
 class Crawler:
@@ -10,22 +10,21 @@ class Crawler:
         self.base_url = base_url
         self.domain = urlparse(base_url).netloc
         self.max_depth = max_depth
-        self.visited = set()
         self.endpoints = []
-        self.semaphore = asyncio.Semaphore(concurrency)
         self.cookies = cookies or {}
+        self.scheduler = CrawlScheduler(worker_count=concurrency)
+        self.session: aiohttp.ClientSession | None = None
 
     def is_same_domain(self, url: str) -> bool:
         return urlparse(url).netloc == self.domain
 
-    async def fetch(self, session: aiohttp.ClientSession, url: str) -> str | None:
-        async with self.semaphore:
-            try:
-                async with session.get(url, timeout=10) as response:
-                    if response.status == 200 and "text/html" in response.headers.get("Content-Type", ""):
-                        return await response.text()
-            except Exception as e:
-                print(f"[Erreur] {url} -> {e}")
+    async def fetch(self, url: str) -> str | None:
+        try:
+            async with self.session.get(url, timeout=10) as response:
+                if response.status == 200 and "text/html" in response.headers.get("Content-Type", ""):
+                    return await response.text()
+        except Exception as e:
+            print(f"[Erreur] {url} -> {e}")
         return None
 
     def extract_links(self, html: str, current_url: str) -> list[str]:
@@ -38,13 +37,11 @@ class Crawler:
         return links
 
     def extract_params(self, url: str) -> list[str]:
-        """Extrait les noms de paramètres GET depuis l'URL (?id=1&user=admin)"""
         parsed = urlparse(url)
         query_params = parse_qs(parsed.query)
         return list(query_params.keys())
 
     def extract_forms(self, html: str, current_url: str) -> list[Form]:
-        """Extrait tous les formulaires d'une page avec leurs champs"""
         soup = BeautifulSoup(html, "lxml")
         forms = []
 
@@ -62,12 +59,10 @@ class Crawler:
                         type=input_tag.get("type", "text"),
                         value=input_tag.get("value", "")
                     ))
-
             for textarea in form_tag.find_all("textarea"):
                 name = textarea.get("name")
                 if name:
                     fields.append(FormField(name=name, type="textarea", value=textarea.text or ""))
-
             for select in form_tag.find_all("select"):
                 name = select.get("name")
                 if name:
@@ -78,12 +73,12 @@ class Crawler:
 
         return forms
 
-    async def crawl(self, session: aiohttp.ClientSession, url: str, depth: int):
-        if depth > self.max_depth or url in self.visited:
+    async def handle_url(self, url: str, depth: int):
+        """Appelé par le scheduler pour chaque URL de la queue."""
+        if depth > self.max_depth:
             return
-        self.visited.add(url)
 
-        html = await self.fetch(session, url)
+        html = await self.fetch(url)
         if html is None:
             return
 
@@ -98,15 +93,14 @@ class Crawler:
             print(f"    Paramètres : {params}")
         if forms:
             print(f"    Formulaires : {len(forms)} trouvé(s)")
-            for f in forms:
-                field_names = [fld.name for fld in f.fields]
-                print(f"      -> action={f.action} method={f.method} champs={field_names}")
 
         links = self.extract_links(html, url)
-        tasks = [self.crawl(session, link, depth + 1) for link in links]
-        await asyncio.gather(*tasks)
+        for link in links:
+            await self.scheduler.add(link, depth + 1)
 
-    async def run(self):
+    async def run(self) -> list[Endpoint]:
         async with aiohttp.ClientSession(cookies=self.cookies) as session:
-            await self.crawl(session, self.base_url, depth=0)
+            self.session = session
+            await self.scheduler.add(self.base_url, depth=0)
+            await self.scheduler.run(self.handle_url)
         return self.endpoints
