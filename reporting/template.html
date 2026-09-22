@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport d'Audit - PurpleScan</title>
+    <style>
+        :root {
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            
+            /* Corporate Colors */
+            --primary-dark: #0f172a; /* Deep slate / navy */
+            --accent-blue: #2563eb;
+            
+            /* Severity Colors (Standard Industry) */
+            --sev-critical: #dc2626;
+            --sev-high: #ea580c;
+            --sev-medium: #ca8a04;
+            --sev-low: #059669;
+            --sev-info: #475569;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        /* Header Enterprise */
+        header {
+            background-color: var(--primary-dark);
+            color: #ffffff;
+            padding: 1.5rem 2rem;
+            border-bottom: 4px solid var(--accent-blue);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+        
+        header p {
+            margin: 5px 0 0 0;
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* KPIs / Widgets */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card h3 {
+            margin: 0 0 1rem 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        /* Risk Colors for Text */
+        .risk-CRITIQUE { color: var(--sev-critical); }
+        .risk-ÉLEVÉ { color: var(--sev-high); }
+        .risk-MOYEN { color: var(--sev-medium); }
+        .risk-FAIBLE { color: var(--sev-low); }
+
+        .breakdown-list {
+            list-style: none;
+            padding: 0; margin: 0;
+        }
+        .breakdown-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.95rem;
+        }
+        .breakdown-list li:last-child { border-bottom: none; }
+
+        /* Table */
+        .table-wrapper {
+            background: var(--bg-card);
+            border-radius: 6px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            padding: 1rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: top;
+            font-size: 0.9rem;
+        }
+
+        tbody tr:hover { background-color: #f8fafc; }
+
+        /* Badges */
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+        .badge-Critique { background-color: var(--sev-critical); }
+        .badge-Élevé { background-color: var(--sev-high); }
+        .badge-Moyen { background-color: var(--sev-medium); }
+        .badge-Faible { background-color: var(--sev-low); }
+        .badge-Info { background-color: var(--sev-info); }
+
+        /* Technical Evidence */
+        .evidence-box {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 250px;
+            overflow-y: auto;
+            border-left: 3px solid var(--text-muted);
+        }
+
+        .remediation-box {
+            margin-top: 0.5rem;
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 0.75rem;
+            border-radius: 4px;
+            color: #166534;
+        }
+
+        .url-link {
+            color: var(--accent-blue);
+            text-decoration: none;
+            word-break: break-all;
+        }
+        .url-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>PurpleScan Security Report</h1>
+        <p>Rapport d'audit automatisé des vulnérabilités web</p>
+    </header>
+
+    <div class="container">
+        <div class="dashboard">
+            <div class="card">
+                <h3>Informations de la cible</h3>
+                <div class="stat-value" style="font-size: 1.25rem; margin-bottom: 0.5rem;">{{ target }}</div>
+                <div style="color: var(--text-muted); font-size: 0.85rem;">Date d'analyse : {{ date }}</div>
+            </div>
+
+            <div class="card">
+                <h3>Score de Risque Global</h3>
+                <div class="stat-value risk-{{ risk_level }}">{{ risk_level }}</div>
+                <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">Score technique : <strong>{{ total_score }}</strong></div>
+            </div>
+
+            <div class="card">
+                <h3>Répartition des vulnérabilités</h3>
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">Total découvert : {{ total_vulnerabilities }}</div>
+                <ul class="breakdown-list">
+                {% for level, count in breakdown.items() %}
+                    <li>
+                        <span>{{ level }}</span>
+                        <strong>{{ count }}</strong>
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <h2 style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--primary-dark);">Détails des Vulnérabilités</h2>
+        
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">Gravité</th>
+                        <th style="width: 20%;">Vulnérabilité</th>
+                        <th style="width: 20%;">Endpoint affecté</th>
+                        <th style="width: 25%;">Preuve technique</th>
+                        <th style="width: 25%;">Recommandation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vuln in vulnerabilities %}
+                    <tr>
+                        <td>
+                            <span class="badge badge-{{ vuln.severity }}">{{ vuln.severity }}</span>
+                        </td>
+                        <td style="font-weight: 600;">{{ vuln.name }}</td>
+                        <td>
+                            <a href="{{ vuln.endpoint }}" class="url-link" target="_blank">{{ vuln.endpoint }}</a>
+                        </td>
+                        <td>
+                            {% if vuln.evidence and vuln.evidence != '-' %}
+                            <div class="evidence-box">{{ vuln.evidence }}</div>
+                            {% else %}
+                            <span style="color: var(--text-muted); font-style: italic;">Non disponible</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="margin-bottom: 0.5rem;">{{ vuln.description }}</div>
+                            <div class="remediation-box">
+                                <strong>Action requise :</strong><br>
+                                {{ vuln.remediation }}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

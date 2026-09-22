@@ -8,7 +8,8 @@ from modules.passive.cors_audit import CorsAuditor
 from modules.active.xss import XSSScanner
 from modules.active.sqli import SQLiScanner
 from modules.active.path_traversal import PathTraversalScanner
-
+from reporting.json_report import generate_json_report
+from reporting.html_report import generate_html_report
 
 async def main():
     target = "http://localhost:8080"
@@ -72,7 +73,16 @@ async def main():
     print(f"\n{'=' * 50}")
     print("RÉSULTATS FINAUX DU SCAN")
     print(f"{'=' * 50}")
+    # ================================
+    # Génération des rapports
+    # ================================
+    generate_json_report(target, all_vulnerabilities)
+    generate_html_report(target, all_vulnerabilities)
 
+    print(f"\n{'=' * 50}")
+    print(f"Scan terminé. {len(all_vulnerabilities)} vulnérabilité(s) trouvée(s).")
+    print(f"Consulte les rapports dans le dossier 'reports/'")
+    print(f"{'=' * 50}")
     if len(all_vulnerabilities) == 0:
         print("\n[-] Aucune faille trouvée (ou les cookies fournis sont invalides).")
     else:

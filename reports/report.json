@@ -1,0 +1,75 @@
+{
+  "scan_info": {
+    "target": "http://localhost:8080",
+    "date": "2026-09-21T15:12:36.758561",
+    "tool": "PurpleScan"
+  },
+  "risk_summary": {
+    "total_score": 28,
+    "risk_level": "ÉLEVÉ",
+    "total_vulnerabilities": 7,
+    "breakdown": {
+      "Élevé": 2,
+      "Moyen": 2,
+      "Faible": 3
+    }
+  },
+  "vulnerabilities": [
+    {
+      "name": "Header de sécurité manquant : Content-Security-Policy",
+      "severity": "Élevé",
+      "endpoint": "http://localhost:8080",
+      "description": "Le header 'Content-Security-Policy' n'est pas présent dans la réponse HTTP.",
+      "evidence": "Headers reçus : {'Date': 'Mon, 21 Sep 2026 15:12:35 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '701', 'Content-Type': 'text/html;charset=utf-8'}",
+      "remediation": "Définir une politique CSP stricte pour limiter les sources de scripts/styles."
+    },
+    {
+      "name": "Header de sécurité manquant : Strict-Transport-Security",
+      "severity": "Élevé",
+      "endpoint": "http://localhost:8080",
+      "description": "Le header 'Strict-Transport-Security' n'est pas présent dans la réponse HTTP.",
+      "evidence": "Headers reçus : {'Date': 'Mon, 21 Sep 2026 15:12:35 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '701', 'Content-Type': 'text/html;charset=utf-8'}",
+      "remediation": "Ajouter 'Strict-Transport-Security: max-age=31536000; includeSubDomains' pour forcer HTTPS."
+    },
+    {
+      "name": "Header de sécurité manquant : X-Content-Type-Options",
+      "severity": "Moyen",
+      "endpoint": "http://localhost:8080",
+      "description": "Le header 'X-Content-Type-Options' n'est pas présent dans la réponse HTTP.",
+      "evidence": "Headers reçus : {'Date': 'Mon, 21 Sep 2026 15:12:35 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '701', 'Content-Type': 'text/html;charset=utf-8'}",
+      "remediation": "Ajouter 'X-Content-Type-Options: nosniff' pour empêcher le MIME-sniffing."
+    },
+    {
+      "name": "Header de sécurité manquant : X-Frame-Options",
+      "severity": "Moyen",
+      "endpoint": "http://localhost:8080",
+      "description": "Le header 'X-Frame-Options' n'est pas présent dans la réponse HTTP.",
+      "evidence": "Headers reçus : {'Date': 'Mon, 21 Sep 2026 15:12:35 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '701', 'Content-Type': 'text/html;charset=utf-8'}",
+      "remediation": "Ajouter 'X-Frame-Options: DENY' ou 'SAMEORIGIN' pour prévenir le clickjacking."
+    },
+    {
+      "name": "Header de sécurité manquant : Referrer-Policy",
+      "severity": "Faible",
+      "endpoint": "http://localhost:8080",
+      "description": "Le header 'Referrer-Policy' n'est pas présent dans la réponse HTTP.",
+      "evidence": "Headers reçus : {'Date': 'Mon, 21 Sep 2026 15:12:35 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '701', 'Content-Type': 'text/html;charset=utf-8'}",
+      "remediation": "Définir une politique Referrer-Policy (ex: 'strict-origin-when-cross-origin')."
+    },
+    {
+      "name": "Header de sécurité manquant : Permissions-Policy",
+      "severity": "Faible",
+      "endpoint": "http://localhost:8080",
+      "description": "Le header 'Permissions-Policy' n'est pas présent dans la réponse HTTP.",
+      "evidence": "Headers reçus : {'Date': 'Mon, 21 Sep 2026 15:12:35 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '701', 'Content-Type': 'text/html;charset=utf-8'}",
+      "remediation": "Restreindre les APIs navigateur sensibles (caméra, géolocalisation, etc.)."
+    },
+    {
+      "name": "Divulgation de version serveur",
+      "severity": "Faible",
+      "endpoint": "http://localhost:8080",
+      "description": "Le header 'Server' révèle la version exacte du logiciel serveur.",
+      "evidence": "Server: Apache/2.4.25 (Debian)",
+      "remediation": "Masquer ou généraliser le header 'Server' (ex: retirer le numéro de version)."
+    }
+  ]
+}
