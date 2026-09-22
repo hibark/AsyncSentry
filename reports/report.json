@@ -1,7 +1,7 @@
 {
   "scan_info": {
     "target": "http://localhost:8080",
-    "date": "2026-09-21T15:12:36.758561",
+    "date": "2026-09-22T00:16:23.924972",
     "tool": "PurpleScan"
   },
   "risk_summary": {
@@ -20,7 +20,7 @@
       "severity": "Élevé",
       "endpoint": "http://localhost:8080",
       "description": "Le header 'Content-Security-Policy' n'est pas présent dans la réponse HTTP.",
-      "evidence": "Headers reçus : {'Date': 'Mon, 21 Sep 2026 15:12:35 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '701', 'Content-Type': 'text/html;charset=utf-8'}",
+      "evidence": "Headers reçus : {'Date': 'Tue, 22 Sep 2026 00:16:23 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '699', 'Content-Type': 'text/html;charset=utf-8'}",
       "remediation": "Définir une politique CSP stricte pour limiter les sources de scripts/styles."
     },
     {
@@ -28,7 +28,7 @@
       "severity": "Élevé",
       "endpoint": "http://localhost:8080",
       "description": "Le header 'Strict-Transport-Security' n'est pas présent dans la réponse HTTP.",
-      "evidence": "Headers reçus : {'Date': 'Mon, 21 Sep 2026 15:12:35 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '701', 'Content-Type': 'text/html;charset=utf-8'}",
+      "evidence": "Headers reçus : {'Date': 'Tue, 22 Sep 2026 00:16:23 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '699', 'Content-Type': 'text/html;charset=utf-8'}",
       "remediation": "Ajouter 'Strict-Transport-Security: max-age=31536000; includeSubDomains' pour forcer HTTPS."
     },
     {
@@ -36,7 +36,7 @@
       "severity": "Moyen",
       "endpoint": "http://localhost:8080",
       "description": "Le header 'X-Content-Type-Options' n'est pas présent dans la réponse HTTP.",
-      "evidence": "Headers reçus : {'Date': 'Mon, 21 Sep 2026 15:12:35 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '701', 'Content-Type': 'text/html;charset=utf-8'}",
+      "evidence": "Headers reçus : {'Date': 'Tue, 22 Sep 2026 00:16:23 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '699', 'Content-Type': 'text/html;charset=utf-8'}",
       "remediation": "Ajouter 'X-Content-Type-Options: nosniff' pour empêcher le MIME-sniffing."
     },
     {
@@ -44,7 +44,7 @@
       "severity": "Moyen",
       "endpoint": "http://localhost:8080",
       "description": "Le header 'X-Frame-Options' n'est pas présent dans la réponse HTTP.",
-      "evidence": "Headers reçus : {'Date': 'Mon, 21 Sep 2026 15:12:35 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '701', 'Content-Type': 'text/html;charset=utf-8'}",
+      "evidence": "Headers reçus : {'Date': 'Tue, 22 Sep 2026 00:16:23 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '699', 'Content-Type': 'text/html;charset=utf-8'}",
       "remediation": "Ajouter 'X-Frame-Options: DENY' ou 'SAMEORIGIN' pour prévenir le clickjacking."
     },
     {
@@ -52,7 +52,7 @@
       "severity": "Faible",
       "endpoint": "http://localhost:8080",
       "description": "Le header 'Referrer-Policy' n'est pas présent dans la réponse HTTP.",
-      "evidence": "Headers reçus : {'Date': 'Mon, 21 Sep 2026 15:12:35 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '701', 'Content-Type': 'text/html;charset=utf-8'}",
+      "evidence": "Headers reçus : {'Date': 'Tue, 22 Sep 2026 00:16:23 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '699', 'Content-Type': 'text/html;charset=utf-8'}",
       "remediation": "Définir une politique Referrer-Policy (ex: 'strict-origin-when-cross-origin')."
     },
     {
@@ -60,7 +60,7 @@
       "severity": "Faible",
       "endpoint": "http://localhost:8080",
       "description": "Le header 'Permissions-Policy' n'est pas présent dans la réponse HTTP.",
-      "evidence": "Headers reçus : {'Date': 'Mon, 21 Sep 2026 15:12:35 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '701', 'Content-Type': 'text/html;charset=utf-8'}",
+      "evidence": "Headers reçus : {'Date': 'Tue, 22 Sep 2026 00:16:23 GMT', 'Server': 'Apache/2.4.25 (Debian)', 'Expires': 'Tue, 23 Jun 2009 12:00:00 GMT', 'Cache-Control': 'no-cache, must-revalidate', 'Pragma': 'no-cache', 'Vary': 'Accept-Encoding', 'Content-Encoding': 'gzip', 'Content-Length': '699', 'Content-Type': 'text/html;charset=utf-8'}",
       "remediation": "Restreindre les APIs navigateur sensibles (caméra, géolocalisation, etc.)."
     },
     {

@@ -1,5 +1,6 @@
 import asyncio
 import aiohttp
+import click
 
 from core.crawler import Crawler
 from modules.passive.headers_audit import HeadersAuditor
@@ -11,21 +12,22 @@ from modules.active.path_traversal import PathTraversalScanner
 from reporting.json_report import generate_json_report
 from reporting.html_report import generate_html_report
 
-async def main():
-    target = "http://localhost:8080"
 
-    # Cookies DVWA pour scanner en étant authentifié
-    # Remplace la valeur de PHPSESSID par celle récupérée dans ton navigateur
-    mes_cookies = {
-        "PHPSESSID": "b72eo8m4fbf198f3ah6vj56au7",
-        "security": "low"
-    }
+def parse_cookies(cookie_str: str) -> dict:
+    """Parse une chaîne du type 'PHPSESSID=abc123;security=low' en dict."""
+    cookies = {}
+    if not cookie_str:
+        return cookies
+    for pair in cookie_str.split(";"):
+        if "=" in pair:
+            key, value = pair.strip().split("=", 1)
+            cookies[key] = value
+    return cookies
 
-    # ================================
-    # Phase 1 : Cartographie (Crawling)
-    # ================================
+
+async def run_scan(target: str, depth: int, concurrency: int, mode: str, cookies: dict, output_html: str, output_json: str):
     print(f"=== Phase 1 : Crawling de {target} ===\n")
-    crawler = Crawler(base_url=target, max_depth=2, concurrency=5, cookies=mes_cookies)
+    crawler = Crawler(base_url=target, max_depth=depth, concurrency=concurrency, cookies=cookies)
     endpoints = await crawler.run()
 
     print(f"\n=== Résumé du crawl ===")
@@ -37,84 +39,65 @@ async def main():
 
     all_vulnerabilities = []
 
-    async with aiohttp.ClientSession(cookies=mes_cookies) as session:
+    async with aiohttp.ClientSession(cookies=cookies) as session:
 
-        # ================================
-        # Phase 2 : Analyse passive
-        # ================================
-        print(f"\n=== Phase 2 : Analyse passive ===")
-        headers_auditor = HeadersAuditor(session)
-        cookies_auditor = CookiesAuditor(session)
-        cors_auditor = CorsAuditor(session)
+        if mode in ("passive", "full"):
+            print(f"\n=== Phase 2 : Analyse passive ===")
+            headers_auditor = HeadersAuditor(session)
+            cookies_auditor = CookiesAuditor(session)
+            cors_auditor = CorsAuditor(session)
 
-        for endpoint in endpoints:
-            print(f"[*] Audit passif : {endpoint.url}")
-            all_vulnerabilities.extend(await headers_auditor.audit(endpoint.url))
-            all_vulnerabilities.extend(await cookies_auditor.audit(endpoint.url))
-            all_vulnerabilities.extend(await cors_auditor.audit(endpoint.url))
+            for endpoint in endpoints:
+                print(f"[*] Audit passif : {endpoint.url}")
+                all_vulnerabilities.extend(await headers_auditor.audit(endpoint.url))
+                all_vulnerabilities.extend(await cookies_auditor.audit(endpoint.url))
+                all_vulnerabilities.extend(await cors_auditor.audit(endpoint.url))
 
-        # ================================
-        # Phase 3 : Analyse active (XSS, SQLi, LFI)
-        # ================================
-        print(f"\n=== Phase 3 : Analyse active ===")
-        xss_scanner = XSSScanner(session)
-        sqli_scanner = SQLiScanner(session)
-        pt_scanner = PathTraversalScanner(session)
+        if mode in ("active", "full"):
+            print(f"\n=== Phase 3 : Analyse active ===")
+            xss_scanner = XSSScanner(session)
+            sqli_scanner = SQLiScanner(session)
+            pt_scanner = PathTraversalScanner(session)
 
-        for endpoint in endpoints:
-            print(f"[*] Audit actif sur : {endpoint.url}")
-            all_vulnerabilities.extend(await xss_scanner.scan_endpoint(endpoint))
-            all_vulnerabilities.extend(await sqli_scanner.scan_endpoint(endpoint))
-            all_vulnerabilities.extend(await pt_scanner.scan_endpoint(endpoint))
+            for endpoint in endpoints:
+                print(f"[*] Audit actif sur : {endpoint.url}")
+                all_vulnerabilities.extend(await xss_scanner.scan_endpoint(endpoint))
+                all_vulnerabilities.extend(await sqli_scanner.scan_endpoint(endpoint))
+                all_vulnerabilities.extend(await pt_scanner.scan_endpoint(endpoint))
 
-    # ================================
-    # Résultats finaux
-    # ================================
-    print(f"\n{'=' * 50}")
-    print("RÉSULTATS FINAUX DU SCAN")
-    print(f"{'=' * 50}")
-    # ================================
-    # Génération des rapports
-    # ================================
-    generate_json_report(target, all_vulnerabilities)
-    generate_html_report(target, all_vulnerabilities)
+    # Rapports
+    generate_json_report(target, all_vulnerabilities, output_path=output_json)
+    generate_html_report(target, all_vulnerabilities, output_path=output_html)
 
     print(f"\n{'=' * 50}")
     print(f"Scan terminé. {len(all_vulnerabilities)} vulnérabilité(s) trouvée(s).")
-    print(f"Consulte les rapports dans le dossier 'reports/'")
+    print(f"Rapport JSON : {output_json}")
+    print(f"Rapport HTML : {output_html}")
     print(f"{'=' * 50}")
-    if len(all_vulnerabilities) == 0:
-        print("\n[-] Aucune faille trouvée (ou les cookies fournis sont invalides).")
-    else:
-        # Tri par criticité
-        severity_order = {
-            "Critique": 0,
-            "Élevé": 1,
-            "Moyen": 2,
-            "Faible": 3,
-            "Info": 4
-        }
-        sorted_vulns = sorted(
-            all_vulnerabilities,
-            key=lambda v: severity_order.get(v.severity.value, 99)
-        )
 
-        print(f"\n[+] {len(sorted_vulns)} faille(s) trouvée(s) !\n")
-        for vuln in sorted_vulns:
-            print(f"  [{vuln.severity.value}] {vuln.name}")
-            print(f"    URL          : {vuln.endpoint}")
-            print(f"    Description  : {vuln.description}")
-            if vuln.evidence:
-                print(f"    Preuve       : {vuln.evidence}")
-            print(f"    Remédiation  : {vuln.remediation}")
-            print("-" * 50)
 
-        print(f"\nRésumé par criticité :")
-        for level in ["Critique", "Élevé", "Moyen", "Faible", "Info"]:
-            count = sum(1 for v in sorted_vulns if v.severity.value == level)
-            if count > 0:
-                print(f"  {level} : {count}")
+@click.command()
+@click.option("--target", "-t", required=True, help="URL cible à scanner (ex: http://localhost:8080)")
+@click.option("--depth", "-d", default=2, help="Profondeur maximale du crawling (défaut: 2)")
+@click.option("--concurrency", "-c", default=5, help="Nombre de requêtes simultanées (défaut: 5)")
+@click.option("--mode", "-m", type=click.Choice(["passive", "active", "full"]), default="full", help="Mode d'analyse")
+@click.option("--cookie", default="", help="Cookies d'authentification, format: 'PHPSESSID=xxx;security=low'")
+@click.option("--output-html", default="reports/report.html", help="Chemin du rapport HTML")
+@click.option("--output-json", default="reports/report.json", help="Chemin du rapport JSON")
+def cli(target, depth, concurrency, mode, cookie, output_html, output_json):
+    """PurpleScan - Scanner de vulnérabilités web asynchrone (VAPT/Purple Team)."""
+
+    click.secho("\n⚠️  AVERTISSEMENT LÉGAL", fg="yellow", bold=True)
+    click.echo("Cet outil effectue des tests actifs (injection de payloads).")
+    click.echo("Utilisez-le UNIQUEMENT sur des cibles pour lesquelles vous avez une autorisation explicite.\n")
+
+    if not click.confirm("Confirmez-vous être autorisé à scanner cette cible ?"):
+        click.secho("Scan annulé.", fg="red")
+        return
+
+    cookies = parse_cookies(cookie)
+    asyncio.run(run_scan(target, depth, concurrency, mode, cookies, output_html, output_json))
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    cli()
