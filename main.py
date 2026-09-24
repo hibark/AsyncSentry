@@ -8,6 +8,7 @@ from rich.table import Table
 from rich.panel import Panel
 from rich import box
 
+# Importing custom modules from the project
 from core.crawler import Crawler
 from modules.passive.headers_audit import HeadersAuditor
 from modules.passive.cookies_audit import CookiesAuditor
@@ -18,10 +19,11 @@ from modules.active.path_traversal import PathTraversalScanner
 from reporting.json_report import generate_json_report
 from reporting.html_report import generate_html_report
 
+# Initialize Rich console for terminal UI
 console = Console()
 
 def parse_cookies(cookie_str: str) -> dict:
-    """Parses a cookie string into a dictionary."""
+    """Parses a raw cookie string into a Python dictionary."""
     cookies = {}
     if not cookie_str: 
         return cookies
@@ -32,23 +34,25 @@ def parse_cookies(cookie_str: str) -> dict:
     return cookies
 
 def log_msg(msg: str, level: str = "INF", indent: bool = False):
-    """Prints timestamped logs matching the Kali terminal UI."""
+    """Prints formatted and timestamped logs matching the Kali Linux UI."""
     now = datetime.now().strftime("%m/%d/%y %H:%M:%S")
     color = "cyan" if level == "INF" else "green" if level == "OK" else "yellow"
     prefix = "    ┣━ " if indent else ""
     console.print(f"[[blue]{now}[/blue]] [[bold {color}]{level}[/bold {color}]] {prefix}{msg}")
 
 def print_banner():
-    """Displays the main ASCII banner and legal warning."""
-    banner = """[bold bright_blue]
- __        __   _   __     __    _       
- \ \      / /__| |__\ \   / /   | |____  
-  \ \ /\ / / _ \ '_ \\ \ / /| | | | '_ \ 
-   \ V  V /  __/ |_) |\ V / | |_| | | | |
-    \_/\_/ \___|_.__/  \_/   \__,_|_| |_|
-[/bold bright_blue]"""
+    """Displays the main ASCII banner (AsyncSentry) and legal warning."""
+    # Using raw string (r) to prevent invalid escape sequence warnings
+    banner = r"""[bold bright_blue]
+       _                             ____             _             
+      / \   ___ _   _ _ __   ___    / ___|  ___ _ __ | |_ _ __ _   _ 
+     / _ \ / __| | | | '_ \ / __|   \___ \ / _ \ '_ \| __| '__| | | |
+    / ___ \\__ \ |_| | | | | (__     ___) |  __/ | | | |_| |  | |_| |
+   /_/   \_\___/\__, |_| |_|\___|   |____/ \___|_| |_|\__|_|   \__, |
+                |___/                                          |___/ 
+    [/bold bright_blue]"""
     console.print(banner)
-    console.print("[bold white]WebVuln Scanner v0.1.0 - Educational & Authorized VAPT Engine[/bold white]\n")
+    console.print("[bold white]AsyncSentry v1.0 - Educational & Authorized VAPT Engine[/bold white]\n")
 
     warning_text = """This tool is strictly designed for educational testing, CTF challenges, 
 localhost lab environments, and systems where you have [bold #d08770]explicit, written authorization[/bold #d08770].
@@ -57,7 +61,7 @@ Scanning unauthorized targets violates computer crime laws."""
     console.print()
 
 def get_english_severity(severity_value: str) -> str:
-    """Safely maps French severity enums to English for display."""
+    """Safely maps French severity enumerations to English for dashboard display."""
     val = severity_value.lower()
     if "crit" in val: return "Critical"
     if "élev" in val or "high" in val: return "High"
@@ -66,13 +70,14 @@ def get_english_severity(severity_value: str) -> str:
     return "Info"
 
 async def run_scan(target: str, depth: int, concurrency: int, mode: str, cookies: dict, output_html: str, output_json: str):
+    """Main orchestrator function that runs the crawling and scanning phases."""
     start_time = time.time()
     print_banner()
     
     log_msg(f"Fingerprinting technologies on [bold blue]{target}[/bold blue]", indent=True)
     log_msg("Loading attack surface...", indent=True)
     
-    # Phase 1: Crawling
+    # Phase 1: Target Crawling
     log_msg(f"Starting discovery crawl on [bold blue]{target}[/bold blue] (Max depth: {depth}, Max URLs: 100)")
     crawler = Crawler(base_url=target, max_depth=depth, concurrency=concurrency, cookies=cookies)
     endpoints = await crawler.run()
@@ -84,8 +89,10 @@ async def run_scan(target: str, depth: int, concurrency: int, mode: str, cookies
     
     all_vulnerabilities = []
     
+    # Managing an asynchronous HTTP session for all modules
     async with aiohttp.ClientSession(cookies=cookies) as session:
-        # Phase 2: Passive Analysis
+        
+        # Phase 2: Passive Analysis (No malicious payloads sent)
         if mode in ("passive", "full"):
             log_msg(f"Running passive security check modules across {len(endpoints)} endpoints...")
             headers_auditor = HeadersAuditor(session)
@@ -96,7 +103,7 @@ async def run_scan(target: str, depth: int, concurrency: int, mode: str, cookies
                 all_vulnerabilities.extend(await cookies_auditor.audit(endpoint.url))
                 all_vulnerabilities.extend(await cors_auditor.audit(endpoint.url))
 
-        # Phase 3: Active Analysis
+        # Phase 3: Active Analysis (Injecting malicious payloads)
         if mode in ("active", "full"):
             log_msg(f"Running active payload injection across {len(endpoints)} endpoints...")
             xss_scanner = XSSScanner(session)
@@ -107,12 +114,13 @@ async def run_scan(target: str, depth: int, concurrency: int, mode: str, cookies
                 all_vulnerabilities.extend(await sqli_scanner.scan_endpoint(endpoint))
                 all_vulnerabilities.extend(await pt_scanner.scan_endpoint(endpoint))
 
+    # Calculate execution time
     duration = round(time.time() - start_time, 2)
     log_msg(f"Scan completed in [bold green]{duration}s[/bold green]. Reports written to exports/", level="OK")
     
     console.print("\n[bold grey50]        --- Assessment Summary Dashboard ---[/bold grey50]\n")
 
-    # Severity Stats Calculation
+    # Metrics and Severity Stats Calculation
     sev_counts = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0, "Info": 0}
     for v in all_vulnerabilities:
         en_sev = get_english_severity(v.severity.value)
@@ -130,7 +138,7 @@ async def run_scan(target: str, depth: int, concurrency: int, mode: str, cookies
         risk_rating = "Medium"
         score = "6.0 / 10.0"
 
-    # TABLE 1: METRICS
+    # DASHBOARD TABLE 1: General Metrics
     metrics = Table(box=box.ROUNDED, border_style="deep_sky_blue1", header_style="bold deep_sky_blue1", width=50)
     metrics.add_column("Metric", style="bold white")
     metrics.add_column("Value", style="grey82")
@@ -145,7 +153,7 @@ async def run_scan(target: str, depth: int, concurrency: int, mode: str, cookies
     console.print(metrics)
     console.print("\n[bold grey50]        Vulnerabilities By\n           Severity[/bold grey50]")
 
-    # TABLE 2: SEVERITY COUNTS
+    # DASHBOARD TABLE 2: Severity Distribution
     sev_table = Table(box=box.ROUNDED, border_style="deep_sky_blue1", header_style="bold deep_sky_blue1", width=30)
     sev_table.add_column("Severity Level")
     sev_table.add_column("Count", justify="center", style="white")
@@ -160,7 +168,7 @@ async def run_scan(target: str, depth: int, concurrency: int, mode: str, cookies
     console.print(sev_table)
     console.print("\n[bold grey50]                             --- Detailed Findings ({}) ---[/bold grey50]\n".format(len(all_vulnerabilities)))
 
-    # TABLE 3: DETAILED FINDINGS
+    # DASHBOARD TABLE 3: Detailed Findings List
     find_table = Table(box=box.ROUNDED, border_style="deep_sky_blue1", header_style="bold deep_sky_blue1")
     find_table.add_column("Severity")
     find_table.add_column("Title")
@@ -174,22 +182,24 @@ async def run_scan(target: str, depth: int, concurrency: int, mode: str, cookies
     
     console.print(find_table)
 
-    # Generate Reports
+    # Generate external HTML and JSON Reports
     generate_json_report(target, all_vulnerabilities, output_path=output_json)
     generate_html_report(target, all_vulnerabilities, output_path=output_html)
 
 
+# CLI Configuration using Click
 @click.command()
 @click.option("--target", "-t", required=True, help="Target URL to scan (e.g., http://localhost:8080)")
-@click.option("--depth", "-d", default=2, help="Maximum crawling depth")
-@click.option("--concurrency", "-c", default=5, help="Number of concurrent requests")
-@click.option("--mode", "-m", type=click.Choice(["passive", "active", "full"]), default="full", help="Scan mode")
-@click.option("--cookie", default="", help="Authentication cookies (e.g., 'PHPSESSID=xxx')")
-@click.option("--output-html", default="reports/report.html", help="Path to save the HTML report")
-@click.option("--output-json", default="reports/report.json", help="Path to save the JSON report")
+@click.option("--depth", "-d", default=2, help="Maximum crawling depth (default: 2)")
+@click.option("--concurrency", "-c", default=5, help="Number of concurrent asynchronous requests (default: 5)")
+@click.option("--mode", "-m", type=click.Choice(["passive", "active", "full"]), default="full", help="Scan mode (default: full)")
+@click.option("--cookie", default="", help="Authentication cookies (e.g., 'PHPSESSID=xxx;security=low')")
+@click.option("--output-html", default="reports/report.html", help="Path to save the generated HTML report")
+@click.option("--output-json", default="reports/report.json", help="Path to save the generated JSON report")
 def cli(target, depth, concurrency, mode, cookie, output_html, output_json):
-    """WebVuln Scanner - Educational & Authorized VAPT Engine."""
+    """AsyncSentry - Educational & Authorized VAPT Engine."""
     cookies = parse_cookies(cookie)
+    # Launching the main asynchronous event loop
     asyncio.run(run_scan(target, depth, concurrency, mode, cookies, output_html, output_json))
 
 if __name__ == "__main__":
